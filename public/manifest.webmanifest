@@ -1,0 +1,11 @@
+{
+  "name": "Runar",
+  "short_name": "Runar",
+  "description": "Every workout, on the record. A fitness log on BOT Chain.",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#1f2b4d",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

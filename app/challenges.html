@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Challenges · Runar</title>
+  <meta name="theme-color" content="#1f2b4d">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/app.css">
+  <link rel="stylesheet" href="/src/screens.css">
+</head>
+<body>
+<div class="app">
+  <main class="canvas">
+    <div class="title-row">
+      <div>
+        <h1>Challenges</h1>
+        <p class="sub" data-sub>Stake-free competitions. Anyone can create one and anyone can join.</p>
+      </div>
+      <div class="title-actions"><button class="btn primary" type="button" data-create>Create challenge</button></div>
+    </div>
+    <section class="panel" aria-label="Challenges">
+      <div class="tabs" role="tablist" aria-label="Status" data-tabs></div>
+      <div class="table-wrap"><table class="clist" data-table></table></div>
+    </section>
+    <div class="grid below" data-below></div>
+  </main>
+</div>
+
+<div class="sheet-scrim" data-scrim hidden></div>
+<aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" data-sheet hidden>
+  <header class="sheet-head"><h2 id="sheet-h">Create a challenge</h2><button class="btn ghost" type="button" data-close>Close</button></header>
+  <form class="sheet-body" data-create-form novalidate>
+    <div class="field"><label for="c-name">Name</label><input class="input" id="c-name" name="name" maxlength="40" required placeholder="Fourteen days of road" aria-describedby="c-name-hint"><p class="hint" id="c-name-hint">Up to 40 characters. Shown to everyone.</p></div>
+    <div class="two">
+      <div class="field"><label for="c-start">Starts</label><input class="input" id="c-start" name="start" type="date" required></div>
+      <div class="field"><label for="c-end">Ends</label><input class="input" id="c-end" name="end" type="date" required></div>
+    </div>
+    <p class="hint">Days run on UTC. Workouts count from 00:00 on the start day to 23:59 on the end day.</p>
+    <fieldset class="field"><legend class="label">Activities that count</legend><div class="checks" data-checks></div></fieldset>
+    <div class="two">
+      <div class="field"><label for="c-goal">Goal</label>
+        <select class="input" id="c-goal" name="goal">
+          <option value="distance">Most distance</option>
+          <option value="count">Most workouts</option>
+          <option value="reach">Reach a number of workouts</option>
+        </select></div>
+      <div class="field" data-param hidden><label for="c-param">Workouts to reach</label><input class="input num" id="c-param" name="param" type="number" min="1" max="100" value="3"></div>
+    </div>
+    <p class="error-line" data-form-error hidden></p>
+    <div class="sheet-foot">
+      <p class="hint">One transaction. You pay gas only; no funds are held.</p>
+      <button class="btn primary big" type="submit" data-create-submit>Create challenge</button>
+    </div>
+  </form>
+</aside>
+<script type="module" src="/src/challenges.js"></script>
+</body>
+</html>

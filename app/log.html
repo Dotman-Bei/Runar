@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Log a workout · Runar</title>
+  <meta name="theme-color" content="#1f2b4d">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/app.css">
+  <link rel="stylesheet" href="/src/log.css">
+</head>
+<body>
+<div class="app">
+  <main class="canvas">
+    <div class="title-row">
+      <div>
+        <h1>Log a workout</h1>
+        <p class="sub" data-sub>One transaction. Your streak, points and challenges update with it.</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <form class="panel log-form" data-form novalidate>
+        <div class="notice" data-connect-notice hidden>
+          <p>Connect a wallet to log. Your address is your athlete ID, and everything you log is public.</p>
+          <button class="btn primary" type="button" data-connect-inline>Connect wallet</button>
+        </div>
+
+        <fieldset class="field">
+          <legend class="label">Activity</legend>
+          <div class="acts" data-acts role="radiogroup" aria-label="Activity"></div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend class="label">Duration</legend>
+          <div class="dur">
+            <label><input class="input num" type="number" inputmode="numeric" min="0" max="23" name="h" value="0" aria-label="Hours"><span>h</span></label>
+            <label><input class="input num" type="number" inputmode="numeric" min="0" max="59" name="m" value="30" aria-label="Minutes"><span>min</span></label>
+            <label><input class="input num" type="number" inputmode="numeric" min="0" max="59" name="s" value="0" aria-label="Seconds"><span>s</span></label>
+          </div>
+          <div class="quick" aria-label="Quick durations">
+            <button type="button" class="chip" data-min="20">20 min</button>
+            <button type="button" class="chip" data-min="30">30 min</button>
+            <button type="button" class="chip" data-min="45">45 min</button>
+            <button type="button" class="chip" data-min="60">1 h</button>
+          </div>
+          <p class="hint error-line" data-dur-error hidden>Duration must be more than zero.</p>
+        </fieldset>
+
+        <div class="field" data-distance>
+          <label for="km">Distance</label>
+          <div class="unit"><input class="input num" id="km" name="km" type="text" inputmode="decimal" placeholder="0.00" aria-describedby="km-hint"><span>km</span></div>
+          <p class="hint" id="km-hint">Optional. Counts toward distance challenges.</p>
+        </div>
+        <p class="hint gym-line" data-gym-line hidden>Gym sessions log duration only.</p>
+
+        <div class="field">
+          <label for="note">Note</label>
+          <textarea class="input" id="note" name="note" maxlength="140" rows="3" placeholder="Easy 5 k, negative split" aria-describedby="note-count"></textarea>
+          <p class="hint" id="note-count"><span data-count>0</span> / 140 characters · stored on-chain, public</p>
+        </div>
+      </form>
+
+      <aside class="stack log-rail" aria-label="This workout">
+        <section class="panel preview" data-preview aria-live="polite"></section>
+      </aside>
+    </div>
+    <div class="log-dock" data-dock><span><b data-dock-pts>+0</b> points</span><button class="btn primary" type="button" data-dock-submit>Sign and log</button></div>
+  </main>
+</div>
+<script type="module" src="/src/log.js"></script>
+</body>
+</html>

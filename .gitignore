@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+# local design-tool working files
+.claude/
+.taste-skill/
+# originals of public/img (credits kept)
+assets/*
+!assets/credits.json

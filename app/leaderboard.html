@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Leaderboard · Runar</title>
+  <meta name="theme-color" content="#1f2b4d">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/app.css">
+  <link rel="stylesheet" href="/src/screens.css">
+</head>
+<body>
+<div class="app">
+  <main class="canvas">
+    <div class="title-row">
+      <div>
+        <h1>Leaderboard</h1>
+        <p class="sub" data-sub>Read from the contract. Every row links to the workouts behind it.</p>
+      </div>
+    </div>
+    <div class="split">
+      <section class="panel" aria-label="Rankings">
+        <div class="tabs" role="tablist" aria-label="Rank by" data-tabs>
+          <button role="tab" data-tab="points" aria-selected="true">Points</button>
+          <button role="tab" data-tab="streak" aria-selected="false" tabindex="-1">Current streak</button>
+          <button role="tab" data-tab="week" aria-selected="false" tabindex="-1">This week</button>
+        </div>
+        <div class="table-wrap"><table class="ranks" data-table></table></div>
+      </section>
+      <aside class="stack">
+        <section>
+          <h2 class="rail-head">How this is ranked</h2>
+          <div class="panel"><p data-explain></p></div>
+        </section>
+        <section>
+          <h2 class="rail-head">Check any row</h2>
+          <div class="panel"><p>Open an athlete’s record and press <b>Replay from events</b>. Your browser rebuilds their streak and points from the public <code>WorkoutLogged</code> events and compares them with what the contract reports.</p></div>
+        </section>
+        <section>
+          <h2 class="rail-head">Team wallets</h2>
+          <div class="panel"><p>Rows marked <span class="pill">Team</span> are Runar team wallets that ran the Genesis challenge at launch. They are scored by the same contract as everyone else.</p></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+<script type="module" src="/src/leaderboard.js"></script>
+</body>
+</html>
