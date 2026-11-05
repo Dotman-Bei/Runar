@@ -115,3 +115,6 @@ fieldset.field legend { padding: 0; margin-bottom: 8px; }
 @media (max-width: 860px) {
   .kpis:has(.kpi:nth-child(5)) .kpi:last-child { grid-column: 1 / -1; }
 }
+
+/* Display name */
+.name-form { display: grid; gap: 10px; }

@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "viem": "2.57.16"
   }
 }

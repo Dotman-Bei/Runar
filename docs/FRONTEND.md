@@ -160,7 +160,7 @@ Right: a paper slip with a zigzag foot:
 
 - *Once* — Connect a wallet · 1 signature · Set a display name (optional) · 1 transaction
 - *Every workout* — Pick run, walk, gym, cycle or swim · Duration and distance · A note, up to 140
-  characters · Sign and send · under a second
+  characters · Sign and send · about a second
 - *Automatically* — Streak checked against yesterday · in-contract · Points credited · in-contract ·
   Challenge standings updated · in-contract
 - Inverted last row: "A workout nobody can delete · 1 tx"
@@ -211,8 +211,8 @@ contract never holds funds. Standings are kept as you log, so closing never repl
 - *Escrow* — Do challenges hold money? — No. Challenges are stake-free. The contract never holds funds.
 - *Wearables* — Does it sync with Strava or Apple Health? — Not in v1. Signed imports are planned for
   a later milestone.
-- *Cost* — What does a workout cost to log? — Gas only, a fraction of a cent on BOT Chain. A year of
-  daily workouts costs less than one coffee.
+- *Cost* — What does a workout cost to log? — Only gas, paid in BOT: about 0.002 BOT a workout, roughly
+  2 cents at BOT's price in November 2026. A year of daily workouts comes to about 0.7 BOT.
 
 **CTA — a sentence with a blank.** "Put my first [run ▾] on the **record**" — the blank is an activity
 select; "record" is the submit button (accent block) and opens `app/log.html?type=<activity>`. Line
@@ -329,8 +329,9 @@ contract's value ("Points 1,284 · replayed 1,284 · match").
 
 ## 6. Open items before launch
 
-- Explorer base URL, RPC and chain ID 677 must be confirmed from BOT Chain Builder Docs and chainlist
-  (`src/config.js`); never hardcoded from memory.
-- Point weights and the multiplier ladder (§3.0) must match the deployed contract.
-- The dataset in `src/data.js` is sample data (team wallets, names, workouts) for design at real density.
-- Wallet connection is a mock adapter (`src/chain.js`) with the same calls as the contract.
+- Done: the contract is live at `0x41782c0A753f5B2cde7c9e5bA814ABEC899489BD`, and `src/config.js` holds the RPC,
+  explorer and chain ID confirmed from BOT Chain's docs. Point weights and the multiplier ladder (§3.0) match it.
+- `src/data.js` reads the contract's events and caches them in the browser. First-visit load grows with chain age, so
+  an indexer (PRD M3) will be needed as the record gets long.
+- Connection is by injected wallet only (`src/wallet.js`), so a phone needs a wallet app's built-in browser.
+- Add team wallets to `TEAM_WALLETS` in `src/config.js` when they join Genesis, so the leaderboard marks them.

@@ -1,6 +1,5 @@
-import { mountShell } from './shell.js';
-import { TODAY, athletes, challenges, weekByDay, workoutsOf } from './data.js';
-import { connect } from './chain.js';
+import { connectWallet, mountShell } from './shell.js';
+import { TODAY, challenges, ranked, weekByDay, workoutsOf } from './data.js';
 import { dayDate, int, km, nameOf, ordinal, plural, weekday } from './format.js';
 import { FLAME, WORKOUT_HEAD, avatar, chain, esc, workoutRow } from './ui.js';
 
@@ -15,12 +14,12 @@ function untilMidnight() {
 
 // ---- rail: the week's leaderboard around you, and your challenges ----------------------------------
 function weekBoard() {
-  const rows = [...athletes].sort((a, b) => b.weekMinutes - a.weekMinutes || a.address.localeCompare(b.address));
+  const rows = ranked().sort((a, b) => b.weekMinutes - a.weekMinutes || a.address.localeCompare(b.address));
   const i = me ? rows.findIndex((a) => a.address === me) : 0;
   const from = Math.max(0, Math.min(i - 2, rows.length - 5));
   return `<section>
     <h2 class="rail-head">This week</h2>
-    <div class="panel"><ol class="board">${rows.slice(from, from + 5).map((a, k) => `
+    <div class="panel">${rows.length ? '' : '<p class="empty">Nobody has logged yet. The first workout takes first place.</p>'}<ol class="board">${rows.slice(from, from + 5).map((a, k) => `
       <li class="${a.address === me ? 'me' : ''}"><span class="rank num">${from + k + 1}</span>
         <a class="who" href="/app/athlete.html?a=${a.address}">${avatar(a, 'sm')}<b>${esc(nameOf(a))}</b></a>
         <span class="num">${int(a.weekMinutes)} <small class="muted">min</small></span></li>`).join('')}</ol>
@@ -44,21 +43,29 @@ function myChallenges() {
     </div></section>`;
 }
 
-// ---- first run: no wallet ------------------------------------------------------------------------
-if (!meA) {
-  $('[data-title]').textContent = 'Dashboard';
-  $('[data-sub]').textContent = 'Connect a wallet to see your streak and points. Your address is your athlete ID.';
-  $('[data-primary]').textContent = 'Connect wallet';
-  $('[data-primary]').addEventListener('click', async (e) => { e.preventDefault(); await connect(); location.reload(); });
+// ---- first run: no wallet yet, or a wallet with no workouts -----------------------------------------
+if (!meA || !meA.profile.totalWorkouts) {
+  const open = challenges.filter((c) => c.status === 'open');
+  if (meA) {
+    $('[data-title]').textContent = nameOf(meA);
+    $('[data-sub]').textContent = 'Your wallet is connected. Your first workout creates your record.';
+    $('[data-primary]').textContent = 'Log your first workout';
+  } else {
+    $('[data-title]').textContent = 'Dashboard';
+    $('[data-sub]').textContent = 'Connect a wallet to see your streak and points. Your address is your athlete ID.';
+    $('[data-primary]').textContent = 'Connect wallet';
+    $('[data-primary]').addEventListener('click', (e) => { e.preventDefault(); connectWallet(e.currentTarget); });
+  }
   body.innerHTML = `<div class="stack">
       <section class="panel first-run">
         <h2>No record yet</h2>
-        <p>Your first workout starts a 1-day streak and earns points straight away. Everything you log is public and stays on BOT Chain.</p>
+        <p>Your first workout starts a 1-day streak and earns points straight away. Everything you log is public and stays on BOT Chain. You’ll need a little BOT for gas, about 0.004 BOT for a first workout.</p>
         <a class="btn primary big" href="/app/log.html">Log your first workout</a>
+        ${meA ? `<a class="card-link" href="/app/athlete.html?a=${me}">Set a display name</a>` : ''}
       </section>
       <section class="panel">
         <header><h2>Open to join</h2><a class="card-link" href="/app/challenges.html">All challenges</a></header>
-        <ul class="mych">${challenges.filter((c) => c.status === 'open').map((c) => `<li><a href="/app/challenge.html?id=${c.id}"><b>${esc(c.name)}</b><span class="muted">${esc(c.rule)}</span></a><span class="num">${plural(c.endDay - TODAY + 1, 'day')} left<span class="sub">${plural(c.participants, 'athlete')}</span></span></li>`).join('')}</ul>
+        ${open.length ? '' : '<p class="empty">No challenge is open right now.</p>'}<ul class="mych">${open.map((c) => `<li><a href="/app/challenge.html?id=${c.id}"><b>${esc(c.name)}</b><span class="muted">${esc(c.rule)}</span></a><span class="num">${plural(c.endDay - TODAY + 1, 'day')} left<span class="sub">${plural(c.participants, 'athlete')}</span></span></li>`).join('')}</ul>
       </section>
     </div>
     <aside class="stack">${weekBoard()}</aside>`;

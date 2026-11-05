@@ -1,5 +1,5 @@
 import { mountShell } from './shell.js';
-import { athletes } from './data.js';
+import { ranked } from './data.js';
 import { dayDate, int, km, nameOf, plural, shortAddr } from './format.js';
 import { avatar, esc } from './ui.js';
 
@@ -30,9 +30,9 @@ let tab = TABS[params.get('tab')] ? params.get('tab') : 'points';
 function render() {
   const t = TABS[tab];
   // ties keep a stable order: lower address first
-  const rows = [...athletes].sort((a, b) => t.value(b) - t.value(a) || a.address.localeCompare(b.address));
+  const rows = ranked().sort((a, b) => t.value(b) - t.value(a) || a.address.localeCompare(b.address));
   $('[data-table]').innerHTML = `<thead><tr><th class="rank">Rank</th><th>Athlete</th><th class="n">${t.head[0]}</th><th class="n col-2">${t.head[1]}</th><th class="n col-3">Last workout</th></tr></thead>
-    <tbody>${rows.map((a, i) => `<tr class="${a.address === me ? 'me' : ''}">
+    <tbody>${rows.length ? '' : '<tr><td colspan="5"><p class="empty">No workouts are on the chain yet. <a class="tx" href="/app/log.html">Log the first one</a>.</p></td></tr>'}${rows.map((a, i) => `<tr class="${a.address === me ? 'me' : ''}">
       <td class="rank num">${i + 1}</td>
       <td><span class="who">${avatar(a)}<a href="/app/athlete.html?a=${a.address}"><span><b>${esc(nameOf(a))}</b>${a.address === me ? '<span class="you">you</span>' : ''}</span><span class="sub num">${shortAddr(a.address)}</span></a>${a.team ? '<span class="pill">Team</span>' : ''}</span></td>
       <td class="n num fig-main">${t.fmt(a)}</td>
@@ -40,6 +40,7 @@ function render() {
       <td class="n num col-3">${a.profile.lastWorkoutDay != null ? dayDate(a.profile.lastWorkoutDay) : '—'}</td>
     </tr>`).join('')}</tbody>`;
   $('[data-explain]').textContent = t.explain;
+  document.querySelector('[data-team]').hidden = !rows.some((a) => a.team);
 
   // the finding: where you stand and the gap to the next place
   const i = rows.findIndex((a) => a.address === me);

@@ -1,24 +1,11 @@
-import { TODAY, YOU, athleteBy, challengeBy, workouts, workoutsOf } from './data.js';
 import { ACTIVITIES, multiplierTenths, pointsFor } from './rules.js';
-import { duration, km, nameOf, shortHash, weekday, dayDate } from './format.js';
+import { duration, km, plural, shortAddr, shortHash, weekday, dayDate } from './format.js';
 import { txHref } from './config.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// ---- The bib: yesterday's run from the sample chain --------------------------------------------
-{
-  const w = workoutsOf(YOU).filter((x) => x.dayId === TODAY - 1)[0];
-  if (w) {
-    $('[data-bib-id]').textContent = w.workoutId;
-    $('[data-bib-what]').textContent = `${ACTIVITIES[w.activity].label} · ${km(w.distanceM)} km · ${duration(w.durationSec)}`;
-    $('[data-bib-streak]').textContent = `Day ${w.streakAfter}`;
-    const tx = $('[data-bib-tx]');
-    tx.textContent = `tx ${shortHash(w.tx)}`;
-    tx.href = txHref(w.tx, w.user, w.workoutId);
-  }
-}
+const TODAY = Math.floor(Date.now() / 86400000);
 
 // ---- Hero: the bib holds, then shrinks to a stub in the bottom-left corner ----------------------
 {
@@ -156,17 +143,8 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
 }
 
-// ---- Genesis standings, from the same data the app reads ---------------------------------------
-{
-  const c = challengeBy(1);
-  $('[data-gen-count]').textContent = c.participants;
-  $('[data-gen-rows]').innerHTML = c.standings.slice(0, 6).map((r) => {
-    const a = athleteBy(r.address);
-    const pill = r.rank === 1 ? '<span class="pill pill--win">Winner</span>'
-      : r.count >= c.goalParam ? '<span class="pill pill--done">Goal met</span>' : '<span class="pill pill--short">Short</span>';
-    return `<li><span class="standings__rank">${r.rank}</span><span class="standings__name">${nameOf(a)}${r.address === YOU ? '<small>you</small>' : ''}</span><span class="standings__stat">${r.count} workouts</span>${pill}</li>`;
-  }).join('');
-}
+let nextId = 1;
+let setNextId = () => {};
 
 // ---- The blank in the closing sentence fits the word chosen -------------------------------------
 {
@@ -180,14 +158,12 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     probe.textContent = sel.options[sel.selectedIndex].text;
     sel.style.setProperty('--w', `calc(${probe.getBoundingClientRect().width}px + 1.2em)`);
   };
-  // the preview bib: the next workoutId on the sample chain and what the streak would become
-  const you = athleteBy(YOU);
-  const nextId = workouts.length + 1;
-  const nextStreak = you.loggedToday ? you.currentStreak : you.currentStreak + 1;
+  // the preview bib: the number the next workout on the chain will get
   const preview = () => {
     $('[data-next-id]').textContent = nextId;
-    $('[data-next-what]').textContent = `Your next workout: ${ACTIVITIES[sel.value].label.toLowerCase()}, today. For ${you.name}, that is day ${nextStreak} of the streak.`;
+    $('[data-next-what]').textContent = `Logged now, your ${sel.options[sel.selectedIndex].text} would be workout ${nextId} on the record.`;
   };
+  setNextId = (id) => { nextId = id; preview(); };
   preview();
   sel.addEventListener('change', preview);
   sel.addEventListener('change', fit);
@@ -216,3 +192,36 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     else new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? video.play().catch(() => {}) : video.pause()))).observe(video);
   } else targets.forEach((t) => t.classList.add('is-in'));
 }
+
+// ---- Live figures. Loaded last, so a slow or unreachable RPC never holds up the page ----------------
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+import('./data.js').then(({ athleteBy, challenges, chainStatus, lastWorkout, workouts }) => {
+  if (!chainStatus.ok && !workouts.length) return;
+  setNextId(workouts.length + 1);
+
+  // the bib: the most recent workout on the chain
+  const w = lastWorkout();
+  if (w) {
+    $('[data-bib-id]').textContent = w.workoutId;
+    $('[data-bib-what]').textContent = [ACTIVITIES[w.activity].label, w.distanceM ? `${km(w.distanceM)} km` : null, duration(w.durationSec)].filter(Boolean).join(' \u00b7 ');
+    $('[data-bib-streak]').textContent = `Day ${w.streakAfter}`;
+    const tx = $('[data-bib-tx]');
+    tx.textContent = `tx ${shortHash(w.tx)}`;
+    tx.href = txHref(w.tx);
+  }
+
+  // Genesis, once it has been opened
+  const c = challenges.find((x) => x.name === 'Genesis 7-day');
+  if (!c) return;
+  $('[data-gen-link]').href = `/app/challenge.html?id=${c.id}`;
+  const state = c.status === 'closed' ? 'closed' : c.status === 'upcoming' ? `starts ${dayDate(c.startDay)}` : c.status === 'ended' ? 'ended' : `ends ${dayDate(c.endDay)}`;
+  $('[data-gen-state]').textContent = `Log ${c.goalParam} or more workouts \u00b7 ${state} \u00b7 ${plural(c.participants, 'athlete')}`;
+  $('[data-gen-rows]').innerHTML = c.standings.slice(0, 6).map((r) => {
+    const a = athleteBy(r.address);
+    const won = c.winner && c.winner.address === r.address;
+    const pill = won ? '<span class="pill pill--win">Winner</span>'
+      : r.count >= c.goalParam ? '<span class="pill pill--done">Goal met</span>' : '<span class="pill pill--short">Short</span>';
+    return `<li><span class="standings__rank">${r.rank}</span><span class="standings__name">${esc(a.name || shortAddr(a.address))}</span><span class="standings__stat">${plural(r.count, 'workout')}</span>${pill}</li>`;
+  }).join('');
+}).catch(() => { /* the page reads fine without live figures */ });

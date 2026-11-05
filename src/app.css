@@ -247,3 +247,13 @@ textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: ver
 .brand-sm svg { width: 28px; height: 28px; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; } }
+
+/* wallet and chain messages */
+.net.off::before { background: var(--negative); }
+.notices { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(560px, calc(100% - 32px)); z-index: 50; }
+.notice-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: var(--radius-card);
+  background: var(--text); color: #fff; box-shadow: 0 8px 24px rgba(31, 43, 77, .24); /* taste-skill-ignore: a floating message */
+}
+.notice-item .textbtn { flex: none; color: #fff; text-decoration-color: currentColor; }
+@media (max-width: 860px) { .notices { bottom: calc(68px + env(safe-area-inset-bottom)); } }

@@ -5,6 +5,7 @@ const page = (p) => resolve(import.meta.dirname, p);
 
 export default defineConfig({
   build: {
+    target: 'es2022', // the data layer reads the chain with top-level await
     rollupOptions: {
       input: {
         landing: page('index.html'),
@@ -17,4 +18,6 @@ export default defineConfig({
       },
     },
   },
+  esbuild: { target: 'es2022' },
+  optimizeDeps: { esbuildOptions: { target: 'es2022' } },
 });

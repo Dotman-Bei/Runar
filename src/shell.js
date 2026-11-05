@@ -1,5 +1,5 @@
 // The app frame: sidebar + top bar on desktop, top bar + bottom bar on a phone. Every app page calls mountShell().
-import { athletes, athleteBy } from './data.js';
+import { athletes, athleteBy, chainStatus } from './data.js';
 import { account, connect } from './chain.js';
 import { CHAIN_ID, CHAIN_NAME } from './config.js';
 import { nameOf, shortAddr } from './format.js';
@@ -24,6 +24,41 @@ const NAV = [
   { id: 'challenges', label: 'Challenges', short: 'Challenges', href: '/app/challenges.html' },
 ];
 
+// A message that floats above the screen: errors from the wallet or the chain. Pages replace their canvas, so it
+// lives outside it.
+export function notify(message) {
+  let box = document.querySelector('.notices');
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'notices';
+    document.body.append(box);
+  }
+  const item = document.createElement('p');
+  item.className = 'notice-item';
+  item.setAttribute('role', 'alert');
+  item.textContent = message;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'textbtn';
+  close.textContent = 'Dismiss';
+  close.addEventListener('click', () => item.remove());
+  item.append(close);
+  box.replaceChildren(item);
+}
+
+// Connect, then reload so every figure on the page is for this wallet. Failures are explained, not swallowed.
+export async function connectWallet(btn) {
+  const label = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+  try {
+    await connect();
+    location.reload();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+    notify(e.message);
+  }
+}
+
 export function mountShell({ page, crumb }) {
   const me = account();
   const meA = me && athleteBy(me);
@@ -37,10 +72,10 @@ export function mountShell({ page, crumb }) {
       <nav class="nav" aria-label="Main">${NAV.map(navItem).join('')}</nav>
       <p class="nav-label">Your record</p>
       <nav class="nav" aria-label="Record">
-        <a class="nav-item" href="/app/athlete.html${me ? `?a=${me}` : ''}"${page === 'athlete' && (!me || new URLSearchParams(location.search).get('a') === me) ? ' aria-current="page"' : ''}>${ICONS.record}Public record</a>
+        <a class="nav-item" href="/app/athlete.html${me ? `?a=${me}` : ''}"${page === 'athlete' && (!me || (new URLSearchParams(location.search).get('a') || me).toLowerCase() === me.toLowerCase()) ? ' aria-current="page"' : ''}>${ICONS.record}Public record</a>
       </nav>
       <div class="sidebar-foot">
-        <span class="net">${CHAIN_NAME} · chain ${CHAIN_ID}</span>
+        <span class="net${chainStatus.ok ? '' : ' off'}">${CHAIN_NAME} · chain ${CHAIN_ID}</span>
         <a href="/">About Runar</a>
       </div>
     </aside>
@@ -54,18 +89,32 @@ export function mountShell({ page, crumb }) {
         <div class="search-results" hidden></div>
       </div>
       ${meA
-        ? `<a class="wallet" href="/app/athlete.html?a=${meA.address}" aria-label="Your record: ${esc(nameOf(meA))}">${avatar(meA)}<span class="wallet-text">${esc(nameOf(meA))}<small>${shortAddr(meA.address)}</small></span></a>`
+        ? `<a class="wallet" href="/app/athlete.html?a=${meA.address}" aria-label="Your record: ${esc(nameOf(meA))}">${avatar(meA)}<span class="wallet-text">${esc(nameOf(meA))}<small>${meA.name ? shortAddr(meA.address) : 'Connected'}</small></span></a>`
         : `<button class="wallet" type="button" data-connect><span class="avatar" aria-hidden="true">?</span><span class="wallet-text">Connect wallet<small>to log and join</small></span></button>`}
     </header>`);
   app.insertAdjacentHTML('beforeend', `<nav class="bottombar" aria-label="Main">${NAV.map((n) => `<a href="${n.href}"${n.id === page ? ' aria-current="page"' : ''}>${ICONS[n.id]}${n.short}</a>`).join('')}</nav>`);
   canvas.id = 'main';
 
   app.querySelectorAll('[data-connect]').forEach((b) => b.addEventListener('click', async () => {
+    const text = b.querySelector('.wallet-text').firstChild;
+    const label = text.textContent;
     b.disabled = true;
-    b.querySelector('.wallet-text').firstChild.textContent = 'Connecting…';
-    await connect();
-    location.reload();
+    text.textContent = 'Connecting…';
+    try {
+      await connect();
+      location.reload();
+    } catch (e) {
+      b.disabled = false;
+      text.textContent = label;
+      notify(e.message);
+    }
   }));
+
+  if (!chainStatus.ok) {
+    notify(chainStatus.cachedAt
+      ? `Couldn’t reach BOT Chain. Showing the record saved on this device from ${new Date(chainStatus.cachedAt).toLocaleString()}.`
+      : 'Couldn’t reach BOT Chain, and nothing is saved on this device yet. Check your connection and reload.');
+  }
 
   // athlete search: the skeptic's way in
   const input = app.querySelector('#athlete-search');

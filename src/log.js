@@ -1,8 +1,9 @@
-import { mountShell } from './shell.js';
-import { TODAY, challenges, workouts } from './data.js';
+import { connectWallet, mountShell } from './shell.js';
+import { TODAY, challenges } from './data.js';
 import { ACTIVITIES, ACTIVITY_ORDER, NOTE_MAX, basePoints, buckets, multiplierTenths, nextStreak, pointsFor } from './rules.js';
-import { connect, logWorkout } from './chain.js';
-import { txHref } from './config.js';
+import { logWorkout } from './chain.js';
+import { DEX_URL, txHref } from './config.js';
+import { client } from './rpc.js';
 import { int, plural, shortHash } from './format.js';
 import { FLAME, PHASE, chain, esc } from './ui.js';
 
@@ -24,7 +25,7 @@ function subline() {
   const sub = $('[data-sub]');
   if (!meA) { sub.textContent = 'One transaction. Your streak, points and challenges update with it.'; return; }
   const p = meA.profile;
-  if (meA.loggedToday) sub.innerHTML = `You've logged today. Another workout adds points; the streak stays at <b>${p.streak} days</b>.`;
+  if (meA.loggedToday) sub.innerHTML = `You've logged today. Another workout adds points; the streak stays at <b>${plural(p.streak, 'day')}</b>.`;
   else if (meA.currentStreak) sub.innerHTML = `Log today to make it <b>${meA.currentStreak + 1} days</b>. The day ends at 00:00 UTC, ${untilMidnight()} from now.`;
   else sub.innerHTML = `Your next workout starts a new streak at <b>1 day</b>. Days run on UTC.`;
 }
@@ -33,10 +34,13 @@ subline();
 // ---- not connected ---------------------------------------------------------------------------------
 if (!me) {
   $('[data-connect-notice]').hidden = false;
-  $('[data-connect-inline]').addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true; e.currentTarget.textContent = 'Connecting…';
-    await connect(); location.reload();
-  });
+  $('[data-connect-inline]').addEventListener('click', (e) => connectWallet(e.currentTarget));
+}
+
+// Enough for a typical log (95k gas at 20 gwei is 0.0019 BOT); a first log can take about twice that.
+const LOW_BALANCE = 4_000_000_000_000_000n;
+if (me) {
+  client.getBalance({ address: me }).then((b) => { state.balance = b; render(); }).catch(() => {});
 }
 
 // ---- activity picker -------------------------------------------------------------------------------
@@ -64,6 +68,7 @@ acts.addEventListener('keydown', (e) => {
 });
 
 // ---- duration, distance, note ---------------------------------------------------------------------
+const noteBytes = () => new TextEncoder().encode(form.note.value).length;
 const durationSec = () => (+form.h.value || 0) * 3600 + (+form.m.value || 0) * 60 + (+form.s.value || 0);
 const distanceM = () => {
   if (!ACTIVITIES[state.activity].hasDistance) return 0;
@@ -81,10 +86,11 @@ form.addEventListener('submit', (e) => e.preventDefault());
 // ---- the preview: what this workout will earn -------------------------------------------------------
 function render() {
   const sec = durationSec();
-  const valid = sec > 0;
-  $('[data-dur-error]').hidden = valid;
+  const noteOk = noteBytes() <= NOTE_MAX;
+  const valid = sec > 0 && sec <= 86400 && noteOk;
+  $('[data-dur-error]').hidden = sec > 0 && sec <= 86400;
   form.querySelectorAll('.quick .chip').forEach((c) => c.setAttribute('aria-pressed', sec === c.dataset.min * 60));
-  $('[data-count]').textContent = form.note.value.length;
+  $('[data-count]').textContent = noteBytes();
   if (state.busy || state.done) return;
 
   const a = ACTIVITIES[state.activity];
@@ -95,7 +101,7 @@ function render() {
   const mult = (multiplierTenths(streak) / 10).toFixed(1);
 
   const streakText = !meA ? 'Connect a wallet to see your streak.'
-    : step.rule === 'same-day' ? `Second workout today: the streak stays at <b>${streak} days</b>.`
+    : step.rule === 'same-day' ? `Second workout today: the streak stays at <b>${plural(streak, 'day')}</b>.`
     : step.rule === 'next-day' ? `Streak <b>${streak - 1} → ${streak} days</b>.`
     : `Starts a new streak at <b>1 day</b>.`;
 
@@ -114,7 +120,9 @@ function render() {
     <div class="streak-line">${FLAME(!!meA)}<p>${streakText}</p></div>
     <div><h3 class="rail-head">Counts toward</h3>${counts}</div>
     <button class="btn primary big block" type="button" data-submit ${!me || !valid ? 'disabled' : ''}>${me ? 'Sign and log' : 'Connect a wallet to log'}</button>
-    <p class="small">${valid ? 'One transaction. Gas only, a fraction of a cent.' : 'Add a duration to log.'}</p>`;
+    <p class="small">${!noteOk ? 'Shorten the note to log.' : !valid ? 'Add a duration of up to 24 hours to log.'
+      : state.balance !== undefined && state.balance < LOW_BALANCE ? `This wallet may be low on gas. <a class="tx" href="${DEX_URL}" target="_blank" rel="noopener">Get BOT</a>`
+      : 'One transaction. About 0.002–0.004 BOT in gas.'}</p>`;
   preview.querySelector('[data-submit]').addEventListener('click', submit);
   $('[data-dock-pts]').textContent = `+${int(pts)}`;
   const dockBtn = $('[data-dock-submit]');
@@ -139,21 +147,21 @@ async function submit() {
   const beforePts = meA.profile.points;
   try {
     const w = await logWorkout({ activity: state.activity, durationSec: durationSec(), distanceM: distanceM(), note: form.note.value.slice(0, NOTE_MAX) },
-      (phase) => { btn.textContent = PHASE[phase]; status.textContent = phase === 'signing' ? 'Check your wallet.' : 'Usually under a second.'; });
+      (phase) => { btn.textContent = PHASE[phase]; status.textContent = phase === 'signing' ? 'Check your wallet.' : 'Usually about a second.'; });
     state.done = true;
     confirmed(w, before, beforePts);
-  } catch {
+  } catch (e) {
     state.busy = false;
     btn.disabled = false; btn.textContent = 'Sign and log';
-    status.innerHTML = '<span class="error-line">Transaction rejected in your wallet. Nothing was logged.</span>';
+    status.innerHTML = `<span class="error-line">${esc(e.message)}</span>`;
   }
 }
 
 function confirmed(w, before, beforePts) {
-  const step = nextStreak(meA.profile, TODAY);
-  const pts = pointsFor(w.activity, w.durationSec, step.streak);
-  const id = workouts.length + 1;
-  const after = step.streak;
+  const pts = w.points;
+  const id = w.workoutId;
+  const after = w.streak;
+  const sameDay = meA.loggedToday;
   form.querySelectorAll('input, textarea, button').forEach((el) => { el.disabled = true; });
   preview.innerHTML = `
     <header><h2>Logged</h2><span class="meta">Confirmed in ${(w.confirmMs / 1000).toFixed(1)} s</span></header>
@@ -164,9 +172,9 @@ function confirmed(w, before, beforePts) {
         <p class="small">Total <span class="num" data-roll-total>${int(beforePts)}</span></p>
       </div>
     </div>
-    <div class="streak-line">${FLAME(true)}<p>${step.rule === 'same-day' ? `Streak stays at <b>${after} days</b>` : `Streak <b><span class="roll" data-roll-streak>${before}</span> days</b>`}</p></div>
+    <div class="streak-line">${FLAME(true)}<p>${sameDay ? `Streak stays at <b>${plural(after, 'day')}</b>` : `Streak <b><span class="roll" data-roll-streak>${before}</span> ${after === 1 ? 'day' : 'days'}</b>`}</p></div>
     <div data-chain>${chain(me, 14)}</div>
-    <p>Transaction <a class="tx num" href="${txHref(w.tx, me, id)}">${shortHash(w.tx)}</a> · workout #${id}</p>
+    <p>Transaction <a class="tx num" href="${txHref(w.tx)}" target="_blank" rel="noopener">${shortHash(w.tx)}</a> · workout #${id}</p>
     <div class="grid-2"><a class="btn primary big block" href="/app/">Back to dashboard</a><a class="btn big block" href="/app/log.html?type=${w.activity}">Log another</a></div>`;
   const today = preview.querySelector('.chain li.today');
   today.classList.add('on', 'new');

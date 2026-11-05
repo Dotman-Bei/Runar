@@ -1,7 +1,7 @@
-import { mountShell } from './shell.js';
+import { connectWallet, mountShell, notify } from './shell.js';
 import { TODAY, athleteBy, challenges } from './data.js';
 import { ACTIVITIES, ACTIVITY_ORDER } from './rules.js';
-import { connect, createChallenge, joinChallenge } from './chain.js';
+import { createChallenge, joinChallenge } from './chain.js';
 import { dayDate, km, nameOf, ordinal, plural } from './format.js';
 import { PHASE, avatar, esc } from './ui.js';
 
@@ -75,10 +75,16 @@ function render() {
     b.addEventListener('keydown', (e) => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (d) tabs[(i + d + tabs.length) % tabs.length].click(); });
   });
   document.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', async () => {
-    if (!me) { b.textContent = 'Connecting…'; await connect(); location.reload(); return; }
+    if (!me) { connectWallet(b); return; }
     b.disabled = true;
-    await joinChallenge(+b.dataset.join, (p) => { b.textContent = p === 'signing' ? 'Sign in wallet…' : 'Confirming…'; });
-    location.reload();
+    try {
+      await joinChallenge(+b.dataset.join, (p) => { b.textContent = p === 'signing' ? 'Sign in wallet…' : 'Confirming…'; });
+      location.reload();
+    } catch (e) {
+      b.disabled = false;
+      b.textContent = 'Join';
+      notify(e.message);
+    }
   }));
 }
 render();
@@ -92,7 +98,7 @@ form.goal.addEventListener('change', () => { $('[data-param]').hidden = form.goa
 let opener = null;
 const open = () => { opener = document.activeElement; sheet.hidden = false; scrim.hidden = false; form.name.focus(); };
 const close = () => { sheet.hidden = true; scrim.hidden = true; opener?.focus(); };
-$('[data-create]').addEventListener('click', async () => { if (!me) { await connect(); location.reload(); return; } open(); });
+$('[data-create]').addEventListener('click', (e) => { if (!me) { connectWallet(e.currentTarget); return; } open(); });
 $('[data-close]').addEventListener('click', close);
 scrim.addEventListener('click', close);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) close(); });
@@ -111,11 +117,16 @@ form.addEventListener('submit', async (e) => {
   if (problem) return;
   const mask = acts.reduce((m, id) => m | ACTIVITIES[id].bit, 0);
   const goal = form.goal.value;
-  const what = acts.length === 5 ? 'Any activity' : `${acts.map((id) => ACTIVITIES[id].label).join(', ')} only`;
-  const rule = goal === 'reach' ? `${what} · ${form.param.value} workouts` : `${what} · ${goal === 'distance' ? 'most distance' : 'most workouts'}`;
   const btn = $('[data-create-submit]');
   btn.disabled = true;
-  const { id } = await createChallenge({ name: form.name.value.trim(), rule, mask, goalType: goal, goalParam: goal === 'reach' ? +form.param.value : 0, startDay, endDay },
-    (p) => { btn.textContent = PHASE[p]; });
-  location.href = `/app/challenge.html?id=${id}`;
+  try {
+    const { id } = await createChallenge({ name: form.name.value.trim(), mask, goalType: goal, goalParam: goal === 'reach' ? +form.param.value : 0, startDay, endDay },
+      (p) => { btn.textContent = PHASE[p]; });
+    location.href = `/app/challenge.html?id=${id}`;
+  } catch (ex) {
+    btn.disabled = false;
+    btn.textContent = 'Create challenge';
+    err.hidden = false;
+    err.textContent = ex.message;
+  }
 });

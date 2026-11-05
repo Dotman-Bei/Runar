@@ -1,60 +1,82 @@
-// Mock wallet and contract adapter. Same calls as Runar.sol (logWorkout, joinChallenge, closeChallenge,
-// setDisplayName), resolved locally so the flows can be designed and tested before deploy. Swap the bodies for
-// viem/ethers calls against CONTRACT_ADDRESS once BOT Chain settings are confirmed (config.js).
-import { YOU, saveLocalWorkout, LOCAL_JOINS, LOCAL_CLOSES, LOCAL_CREATED, challenges } from './data.js';
+// Writes to Runar.sol through the connected wallet. Every call is simulated first, so a contract rule that would fail
+// is reported in words before the wallet asks for a signature.
+import { BaseError, ContractFunctionRevertedError, encodeFunctionData, parseEventLogs } from 'viem';
+import { ACTIVITY_ORDER } from './rules.js';
+import { abi, client, runar } from './rpc.js';
+import { account, ensureChain, provider } from './wallet.js';
 
-const CONNECTED = 'runar.connected';
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-const randomHash = () => '0x' + [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('');
-const addTo = (key, id) => { try { const s = new Set(JSON.parse(localStorage.getItem(key) || '[]')); s.add(id); localStorage.setItem(key, JSON.stringify([...s])); } catch {} };
+export { account, connect, disconnect } from './wallet.js';
 
-export function isConnected() {
-  try { return localStorage.getItem(CONNECTED) === '1'; } catch { return false; }
-}
-export function account() { return isConnected() ? YOU : null; }
+const REVERTS = {
+  ZeroDuration: 'Duration must be more than zero.',
+  DurationTooLong: 'One workout can’t be longer than 24 hours.',
+  NoteTooLong: 'The note is over 140 bytes. Shorten it, especially if it has emoji or accents.',
+  GymHasNoDistance: 'Gym sessions log duration only.',
+  BadName: 'That name isn’t allowed.',
+  NameTaken: 'That display name is taken.',
+  BadWindow: 'Check the dates: the start can’t be in the past and a challenge runs for 366 days at most.',
+  BadMask: 'Pick at least one activity.',
+  BadGoal: 'Check the goal: reaching a number needs that number.',
+  NoSuchChallenge: 'That challenge doesn’t exist.',
+  AlreadyJoined: 'You’ve already joined this challenge.',
+  ChallengeOver: 'This challenge has ended, so it can’t be joined.',
+  ChallengeNotOver: 'This challenge can only be closed after its end day.',
+  AlreadyClosed: 'This challenge is already closed.',
+  TooManyActiveChallenges: 'You’re in 8 running challenges, the most allowed. A slot frees up when one ends.',
+};
 
-export async function connect() {
-  await wait(600);
-  try { localStorage.setItem(CONNECTED, '1'); } catch {}
-  return YOU;
-}
-export function disconnect() { try { localStorage.removeItem(CONNECTED); } catch {} }
-
-// onPhase('signing' | 'confirming') lets the UI show where the transaction is.
-export async function logWorkout({ activity, durationSec, distanceM, note }, onPhase = () => {}) {
-  onPhase('signing');
-  await wait(900);
-  onPhase('confirming');
-  const sent = performance.now();
-  await wait(420 + Math.random() * 300);
-  const w = { activity, durationSec, distanceM, note, timestamp: Math.floor(Date.now() / 1000), tx: randomHash() };
-  saveLocalWorkout(w);
-  return { ...w, confirmMs: Math.round(performance.now() - sent) };
-}
-
-export async function joinChallenge(id, onPhase = () => {}) {
-  onPhase('signing'); await wait(800);
-  onPhase('confirming'); await wait(500);
-  addTo(LOCAL_JOINS, id);
-  return { tx: randomHash() };
+function explain(e) {
+  if (e?.code === 4001 || e?.cause?.code === 4001) return 'Transaction rejected in your wallet. Nothing was sent.';
+  if (e instanceof BaseError) {
+    const revert = e.walk((x) => x instanceof ContractFunctionRevertedError);
+    const name = revert?.data?.errorName;
+    if (name && REVERTS[name]) return REVERTS[name];
+    if (e.walk((x) => x.name === 'InsufficientFundsError')) return 'Not enough BOT in this wallet to pay for gas.';
+    return e.shortMessage || 'The transaction failed.';
+  }
+  return e?.message || 'The transaction failed.';
 }
 
-export async function closeChallenge(id, onPhase = () => {}) {
-  onPhase('signing'); await wait(800);
-  onPhase('confirming'); await wait(500);
-  addTo(LOCAL_CLOSES, id);
-  return { tx: randomHash() };
-}
-
-// createChallenge(name, startDay, endDay, activityMask, goalType, goalParam)
-export async function createChallenge(c, onPhase = () => {}) {
-  onPhase('signing'); await wait(800);
-  onPhase('confirming'); await wait(500);
-  const id = Math.max(...challenges.map((x) => x.id)) + 1;
+async function send(functionName, args, onPhase = () => {}) {
+  const from = account();
+  if (!from) throw new Error('Connect a wallet first.');
   try {
-    const list = JSON.parse(localStorage.getItem(LOCAL_CREATED) || '[]');
-    list.push({ ...c, id });
-    localStorage.setItem(LOCAL_CREATED, JSON.stringify(list));
-  } catch {}
-  return { id, tx: randomHash() };
+    await ensureChain();
+    await client.simulateContract({ ...runar, functionName, args, account: from });
+    const [gas, gasPrice, balance] = await Promise.all([
+      client.estimateContractGas({ ...runar, functionName, args, account: from }),
+      client.getGasPrice(),
+      client.getBalance({ address: from }),
+    ]);
+    if (balance < gas * gasPrice) throw new Error('Not enough BOT in this wallet to pay for gas.');
+
+    onPhase('signing');
+    const hash = await provider.request({
+      method: 'eth_sendTransaction',
+      params: [{ from, to: runar.address, data: encodeFunctionData({ abi, functionName, args }) }],
+    });
+    onPhase('confirming');
+    const sent = performance.now();
+    const receipt = await client.waitForTransactionReceipt({ hash, timeout: 90_000 });
+    if (receipt.status !== 'success') throw new Error('The transaction reverted on-chain.');
+    return { tx: hash, confirmMs: Math.round(performance.now() - sent), events: parseEventLogs({ abi, logs: receipt.logs }) };
+  } catch (e) {
+    throw new Error(explain(e), { cause: e });
+  }
+}
+
+export async function logWorkout({ activity, durationSec, distanceM, note }, onPhase) {
+  const r = await send('logWorkout', [ACTIVITY_ORDER.indexOf(activity), durationSec, distanceM, note], onPhase);
+  const ev = r.events.find((e) => e.eventName === 'WorkoutLogged').args;
+  return { ...r, activity, durationSec, distanceM, note, workoutId: Number(ev.workoutId), points: Number(ev.points), streak: ev.streak };
+}
+
+export const joinChallenge = (id, onPhase) => send('joinChallenge', [BigInt(id)], onPhase);
+export const closeChallenge = (id, onPhase) => send('closeChallenge', [BigInt(id)], onPhase);
+export const setDisplayName = (name, onPhase) => send('setDisplayName', [name], onPhase);
+
+const GOALS = { distance: 0, count: 1, reach: 2 };
+export async function createChallenge({ name, startDay, endDay, mask, goalType, goalParam }, onPhase) {
+  const r = await send('createChallenge', [name, startDay, endDay, mask, GOALS[goalType], goalParam], onPhase);
+  return { ...r, id: Number(r.events.find((e) => e.eventName === 'ChallengeCreated').args.challengeId) };
 }

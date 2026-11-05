@@ -40,7 +40,7 @@ export function workoutRow(w, { showWho = false, who = null } = {}) {
     <td class="n num">${duration(w.durationSec)}</td>
     <td class="n num">${distanceCell(w)}</td>
     <td class="n num">+${int(w.points)}<span class="sub">streak ${w.streakAfter}</span></td>
-    <td class="n"><a class="tx num" href="${txHref(w.tx, w.user, w.workoutId)}">${shortHash(w.tx)}</a><span class="sub">#${w.workoutId}</span></td>
+    <td class="n"><a class="tx num" href="${txHref(w.tx)}" target="_blank" rel="noopener">${shortHash(w.tx)}</a><span class="sub">#${w.workoutId}</span></td>
   </tr>`;
 }
 export const WORKOUT_HEAD = `<thead><tr><th>Workout</th><th class="n">Day</th><th class="n">Duration</th><th class="n">Distance</th><th class="n">Points</th><th class="n">Transaction</th></tr></thead>`;

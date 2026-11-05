@@ -1,6 +1,6 @@
-import { mountShell } from './shell.js';
+import { connectWallet, mountShell, notify } from './shell.js';
 import { TODAY, athleteBy, challengeBy } from './data.js';
-import { closeChallenge, connect, joinChallenge } from './chain.js';
+import { closeChallenge, joinChallenge } from './chain.js';
 import { dayDate, km, nameOf, ordinal, plural } from './format.js';
 import { avatar, esc } from './ui.js';
 
@@ -100,10 +100,17 @@ if (!c) {
   }
 
   const send = async (btn, fn) => {
-    if (!me) { btn.textContent = 'Connecting…'; await connect(); location.reload(); return; }
+    if (!me) { connectWallet(btn); return; }
+    const label = btn.textContent;
     btn.disabled = true;
-    await fn(c.id, (p) => { btn.textContent = p === 'signing' ? 'Sign in wallet…' : 'Confirming…'; });
-    location.reload();
+    try {
+      await fn(c.id, (p) => { btn.textContent = p === 'signing' ? 'Sign in wallet…' : 'Confirming…'; });
+      location.reload();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = label;
+      notify(e.message);
+    }
   };
   root.querySelector('[data-join]')?.addEventListener('click', (e) => send(e.currentTarget, joinChallenge));
   root.querySelector('[data-close]')?.addEventListener('click', (e) => send(e.currentTarget, closeChallenge));
