@@ -34,7 +34,7 @@ function render() {
   $('[data-table]').innerHTML = `<thead><tr><th class="rank">Rank</th><th>Athlete</th><th class="n">${t.head[0]}</th><th class="n col-2">${t.head[1]}</th><th class="n col-3">Last workout</th></tr></thead>
     <tbody>${rows.length ? '' : '<tr><td colspan="5"><p class="empty">No workouts are on the chain yet. <a class="tx" href="/app/log.html">Log the first one</a>.</p></td></tr>'}${rows.map((a, i) => `<tr class="${a.address === me ? 'me' : ''}">
       <td class="rank num">${i + 1}</td>
-      <td><span class="who">${avatar(a)}<a href="/app/athlete.html?a=${a.address}"><span><b>${esc(nameOf(a))}</b>${a.address === me ? '<span class="you">you</span>' : ''}</span><span class="sub num">${shortAddr(a.address)}</span></a>${a.team ? '<span class="pill">Team</span>' : ''}</span></td>
+      <td><span class="who">${avatar(a)}<a href="/app/athlete.html?a=${a.address}"><span><b>${esc(nameOf(a))}</b>${a.address === me ? '<span class="you">you</span>' : ''}</span>${a.name ? `<span class="sub num">${shortAddr(a.address)}</span>` : ""}</a>${a.team ? '<span class="pill">Team</span>' : ''}</span></td>
       <td class="n num fig-main">${t.fmt(a)}</td>
       <td class="n num col-2">${t.second(a)}</td>
       <td class="n num col-3">${a.profile.lastWorkoutDay != null ? dayDate(a.profile.lastWorkoutDay) : '—'}</td>
