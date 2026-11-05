@@ -105,6 +105,7 @@ form.addEventListener('submit', async (e) => {
   const problem = !form.name.value.trim() ? 'Give the challenge a name.'
     : !(startDay >= TODAY) ? 'The start day can’t be in the past.'
     : !(endDay >= startDay) ? 'The end day must be on or after the start day.'
+    : endDay - startDay >= 366 ? 'A challenge can run for 366 days at most.'
     : !acts.length ? 'Pick at least one activity.' : '';
   err.hidden = !problem; err.textContent = problem;
   if (problem) return;

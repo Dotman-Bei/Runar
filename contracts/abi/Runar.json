@@ -1,0 +1,876 @@
+[
+  {
+    "type": "function",
+    "name": "BUCKET_SEC",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_ACTIVE_JOINS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_DURATION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_WINDOW_DAYS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "NAME_MAX",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "NOTE_MAX",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "activeJoins",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "challengeCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "closeChallenge",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createChallenge",
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "startDay",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "endDay",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "activityMask",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "goal",
+        "type": "uint8",
+        "internalType": "enum Runar.Goal"
+      },
+      {
+        "name": "goalParam",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "displayName",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getChallenge",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Runar.Challenge",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "creator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "startDay",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "endDay",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "activityMask",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "goal",
+            "type": "uint8",
+            "internalType": "enum Runar.Goal"
+          },
+          {
+            "name": "goalParam",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "participantCount",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "closed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "leader",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "leaderStat",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "leaderJoinOrder",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getParticipants",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "offset",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "limit",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "page",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProfile",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "totalWorkouts",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "currentStreak",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "bestStreak",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "points",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lastWorkoutDay",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getStanding",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Runar.Standing",
+        "components": [
+          {
+            "name": "joined",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "joinOrder",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "count",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "distanceM",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "lastDay",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getWorkout",
+    "inputs": [
+      {
+        "name": "workoutId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Runar.Workout",
+        "components": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "activity",
+            "type": "uint8",
+            "internalType": "enum Runar.Activity"
+          },
+          {
+            "name": "durationSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "distanceM",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "note",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "joinChallenge",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "logWorkout",
+    "inputs": [
+      {
+        "name": "activity",
+        "type": "uint8",
+        "internalType": "enum Runar.Activity"
+      },
+      {
+        "name": "durationSec",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "distanceM",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "note",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "workoutId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "nameOwner",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pointsFor",
+    "inputs": [
+      {
+        "name": "activity",
+        "type": "uint8",
+        "internalType": "enum Runar.Activity"
+      },
+      {
+        "name": "durationSec",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "streak",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "setDisplayName",
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "today",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "workoutCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "ChallengeClosed",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "stat",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ChallengeCreated",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "startDay",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "endDay",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "activityMask",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "goal",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum Runar.Goal"
+      },
+      {
+        "name": "goalParam",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ChallengeJoined",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "joinOrder",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ChallengeProgress",
+    "inputs": [
+      {
+        "name": "challengeId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "workoutId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "count",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "distanceM",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisplayNameSet",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "WorkoutLogged",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "workoutId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "activityType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum Runar.Activity"
+      },
+      {
+        "name": "durationSec",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "distanceM",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "dayId",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "timestamp",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "points",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "streak",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "note",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyClosed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyJoined",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadGoal",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadMask",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadName",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadWindow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ChallengeNotOver",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ChallengeOver",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DurationTooLong",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GymHasNoDistance",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NameTaken",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoSuchChallenge",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoteTooLong",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TooManyActiveChallenges",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroDuration",
+    "inputs": []
+  }
+]
