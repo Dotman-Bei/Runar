@@ -9,6 +9,7 @@ export const EXPLORER_URL = (env.VITE_EXPLORER_URL || 'https://scan.botchain.ai'
 export const CONTRACT_ADDRESS = env.VITE_RUNAR_ADDRESS || '0x41782c0A753f5B2cde7c9e5bA814ABEC899489BD';
 export const DEPLOY_BLOCK = BigInt(env.VITE_DEPLOY_BLOCK || 29233248);
 export const DEX_URL = 'https://dex.botchain.ai/#/swap';
+export const BOT_SITE_URL = 'https://www.botchain.ai/en/';
 
 // Runar team wallets, marked "Team" on the leaderboard for honesty (PRD §5.3). Add addresses when they join Genesis.
 export const TEAM_WALLETS = [

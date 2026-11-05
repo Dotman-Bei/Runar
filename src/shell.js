@@ -1,7 +1,7 @@
 // The app frame: sidebar + top bar on desktop, top bar + bottom bar on a phone. Every app page calls mountShell().
 import { athletes, athleteBy, chainStatus } from './data.js';
 import { account, connect } from './chain.js';
-import { CHAIN_ID, CHAIN_NAME } from './config.js';
+import { BOT_SITE_URL, CHAIN_ID, CHAIN_NAME, CONTRACT_ADDRESS, EXPLORER_URL, addressHref } from './config.js';
 import { nameOf, shortAddr } from './format.js';
 import { avatar, esc } from './ui.js';
 
@@ -92,6 +92,13 @@ export function mountShell({ page, crumb }) {
         ? `<a class="wallet" href="/app/athlete.html?a=${meA.address}" aria-label="Your record: ${esc(nameOf(meA))}">${avatar(meA)}<span class="wallet-text">${esc(nameOf(meA))}<small>${meA.name ? shortAddr(meA.address) : 'Connected'}</small></span></a>`
         : `<button class="wallet" type="button" data-connect><span class="avatar" aria-hidden="true">?</span><span class="wallet-text">Connect wallet<small>to log and join</small></span></button>`}
     </header>`);
+  // after the canvas, because some pages replace the canvas's contents
+  canvas.insertAdjacentHTML('afterend', `<footer class="app-foot">
+      <span>Runar on BOT Chain</span>
+      <a href="${BOT_SITE_URL}" target="_blank" rel="noopener">BOT Chain official website</a>
+      <a href="${EXPLORER_URL}" target="_blank" rel="noopener">BOT Chain Explorer</a>
+      <a href="${addressHref(CONTRACT_ADDRESS)}" target="_blank" rel="noopener">Runar contract</a>
+    </footer>`);
   app.insertAdjacentHTML('beforeend', `<nav class="bottombar" aria-label="Main">${NAV.map((n) => `<a href="${n.href}"${n.id === page ? ' aria-current="page"' : ''}>${ICONS[n.id]}${n.short}</a>`).join('')}</nav>`);
   canvas.id = 'main';
 
